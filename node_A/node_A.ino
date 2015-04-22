@@ -22,7 +22,6 @@ struct data_to_send {
   unsigned light;
   unsigned door;
   unsigned long hkey;
-  unsigned test; //why isn't it working ?
 };
 
 struct data_received {
@@ -47,11 +46,11 @@ const int optoPin   = A0;
 const int doorPinA  = 2;
 const int led_A_Pin = 6;
 const int led_B_Pin = 5;
-volatile bool led_B_state = LOW;
+bool led_B_state = LOW;
 const int buzzPin   = 9;
-volatile bool buzzPin_state = LOW;
+bool buzzPin_state = LOW;
 unsigned long start_buzz_time = 0;
-volatile bool soft_alarm_state = false;
+bool soft_alarm_state = false;
 
 unsigned long currentTime = 0;
 unsigned long startTime   = 0;
