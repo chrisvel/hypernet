@@ -21,8 +21,8 @@ struct data_to_send {
   unsigned humi;
   unsigned light;
   unsigned door;
+  unsigned pir;
   unsigned long hkey;
-  unsigned test; //why isn't it working ?
 };
 
 struct data_received {
@@ -45,13 +45,15 @@ dht11 DHT11;
 
 const int optoPin   = A0;
 const int doorPinA  = 2;
+const int pirPinA  = 3;
 const int led_A_Pin = 6;
 const int led_B_Pin = 5;
-volatile bool led_B_state = LOW;
+bool led_B_state = LOW;
 const int buzzPin   = 9;
-volatile bool buzzPin_state = LOW;
+bool buzzPin_state = LOW;
 unsigned long start_buzz_time = 0;
-volatile bool soft_alarm_state = false;
+bool soft_alarm_state = false;
+bool pir_alarm_state = false;
 
 unsigned long currentTime = 0;
 unsigned long startTime   = 0;
@@ -80,9 +82,11 @@ void setup(void) {
   pinMode(led_B_Pin, OUTPUT);
   pinMode(buzzPin, OUTPUT);
   pinMode(doorPinA, INPUT_PULLUP);
+  pinMode(pirPinA, INPUT_PULLUP);
 
   // connect D2 pin as an External Interrupt - Reed switch
   attachInterrupt(0, doorStateChange, CHANGE);
+  attachInterrupt(1, pirStateChange, CHANGE);
 }
 
 //////////////////////////////////////
@@ -94,12 +98,17 @@ void loop(void)
 {
 
   // check If soft_alarm_state is true, then count 1s and set it to LOW
-  if (soft_alarm_state){
+  if (soft_alarm_state || pir_alarm_state){
     if (runOnce) {
       startTime = millis();
       runOnce = false;
-      digitalWrite(led_B_Pin, HIGH);
-      digitalWrite(buzzPin, HIGH);
+      if (soft_alarm_state) {
+        digitalWrite(led_B_Pin, HIGH);
+        digitalWrite(buzzPin, HIGH);
+      }
+      else if (pir_alarm_state) {
+        digitalWrite(led_A_Pin, HIGH);
+      }
     }
     currentTime = millis();
 
@@ -108,9 +117,15 @@ void loop(void)
     }
     else {
         runOnce = true;
-        digitalWrite(led_B_Pin, LOW);
-        digitalWrite(buzzPin, LOW);
-        soft_alarm_state = false;
+        if (soft_alarm_state) {
+          digitalWrite(led_B_Pin, LOW);
+          digitalWrite(buzzPin, LOW);
+          soft_alarm_state = false;
+        }
+        else if (pir_alarm_state) {
+          digitalWrite(led_A_Pin, LOW);
+          pir_alarm_state = false;
+        }        
     }
 
   }
@@ -125,6 +140,7 @@ void loop(void)
     payload.humi  = DHT11.humidity;
     payload.light = map(analogRead(optoPin), 0, 1023, 100, 0);
     payload.door  = soft_alarm_state;
+    payload.door  = pir_alarm_state;
     payload.hkey  = random(10000000, 99999999);
 
     // starts counting
@@ -181,6 +197,19 @@ void doorStateChange() {
   if (interrupt_time - last_interrupt_time > 500)
   {
     soft_alarm_state = true;
+  }
+  last_interrupt_time = interrupt_time;
+}
+
+//////////////////////////////////////
+// Interrupt for pir
+//////////////////////////////////////
+void pirStateChange() {
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  if (interrupt_time - last_interrupt_time > 1000)
+  {
+    pir_alarm_state = true;
   }
   last_interrupt_time = interrupt_time;
 }
