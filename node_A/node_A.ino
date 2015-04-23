@@ -53,7 +53,10 @@ const int buzzPin   = 9;
 bool buzzPin_state = LOW;
 unsigned long start_buzz_time = 0;
 bool soft_alarm_state = false;
+<<<<<<< HEAD
 bool pir_alarm_state = false;
+=======
+>>>>>>> 2e87ac67c97485ac5c1b4994cb3e968dcd442e6a
 
 unsigned long currentTime = 0;
 unsigned long startTime   = 0;
