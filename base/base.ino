@@ -158,7 +158,7 @@ void loop() {
          }
          // --------------------------------
          String node_str;
-         if (payload.door){
+         if (payload.door || payload.pir){
            digitalWrite(ledPin, HIGH);
            node_str = String("NODE #")+payload.node+String("     REED ALARM!");
          }
