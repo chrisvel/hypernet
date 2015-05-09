@@ -21,8 +21,8 @@ struct data_to_send {
   unsigned humi;
   unsigned light;
   unsigned door;
-  unsigned pir;
   unsigned long hkey;
+  unsigned test; //why isn't it working ?
 };
 
 struct data_received {
@@ -53,10 +53,7 @@ const int buzzPin   = 9;
 bool buzzPin_state = LOW;
 unsigned long start_buzz_time = 0;
 bool soft_alarm_state = false;
-<<<<<<< HEAD
 bool pir_alarm_state = false;
-=======
->>>>>>> 2e87ac67c97485ac5c1b4994cb3e968dcd442e6a
 
 unsigned long currentTime = 0;
 unsigned long startTime   = 0;
@@ -89,7 +86,7 @@ void setup(void) {
 
   // connect D2 pin as an External Interrupt - Reed switch
   attachInterrupt(0, doorStateChange, CHANGE);
-  attachInterrupt(1, pirStateChange, CHANGE);
+  attachInterrupt(1, pirStateChange, FALLING);
 }
 
 //////////////////////////////////////
@@ -128,7 +125,8 @@ void loop(void)
         else if (pir_alarm_state) {
           digitalWrite(led_A_Pin, LOW);
           pir_alarm_state = false;
-        }        
+        }
+        
     }
 
   }
@@ -143,7 +141,6 @@ void loop(void)
     payload.humi  = DHT11.humidity;
     payload.light = map(analogRead(optoPin), 0, 1023, 100, 0);
     payload.door  = soft_alarm_state;
-    payload.door  = pir_alarm_state;
     payload.hkey  = random(10000000, 99999999);
 
     // starts counting
@@ -210,7 +207,7 @@ void doorStateChange() {
 void pirStateChange() {
   static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
-  if (interrupt_time - last_interrupt_time > 1000)
+  if (interrupt_time - last_interrupt_time > 500)
   {
     pir_alarm_state = true;
   }
