@@ -19,6 +19,7 @@ struct data_received {
   unsigned humi;
   unsigned light;
   unsigned door;
+  unsigned pir;
   unsigned long hkey;
 };
 
@@ -102,6 +103,7 @@ void loop() {
                        + "[humi: "  + String((float)payload.humi,2) + "%] "
                        + "[light: " + String((float)payload.light,2) + "%] "
                        + "[door: "  + String(payload.door) + "] "
+                       + "[pir: "  + String(payload.pir) + "] "
                        + "[hkey: "  + String(payload.hkey) + "] ";
       Serial.println(dataPrint);
 
@@ -158,7 +160,11 @@ void loop() {
          String node_str;
          if (payload.door){
            digitalWrite(ledPin, HIGH);
-           node_str = String("NODE #")+payload.node+String("     SOFT ALARM!");
+           node_str = String("NODE #")+payload.node+String("     REED ALARM!");
+         }
+         else if (payload.pir){
+           digitalWrite(ledPin, HIGH);
+           node_str = String("NODE #")+payload.node+String("     PIR ALARM!");
          }
          else{
            digitalWrite(ledPin, LOW);
