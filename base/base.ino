@@ -19,6 +19,7 @@ struct data_received {
   unsigned humi;
   unsigned light;
   unsigned door;
+  unsigned pir;
   unsigned long hkey;
 };
 
@@ -156,7 +157,7 @@ void loop() {
          }
          // --------------------------------
          String node_str;
-         if (payload.door){
+         if (payload.door || payload.pir){
            digitalWrite(ledPin, HIGH);
            node_str = String("NODE #")+payload.node+String("     SOFT ALARM!");
          }

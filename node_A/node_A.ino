@@ -21,8 +21,8 @@ struct data_to_send {
   unsigned humi;
   unsigned light;
   unsigned door;
+  unsigned pir;
   unsigned long hkey;
-  unsigned test; //why isn't it working ?
 };
 
 struct data_received {
@@ -86,7 +86,7 @@ void setup(void) {
 
   // connect D2 pin as an External Interrupt - Reed switch
   attachInterrupt(0, doorStateChange, CHANGE);
-  attachInterrupt(1, pirStateChange, FALLING);
+  attachInterrupt(1, pirStateChange, RISING);
 }
 
 //////////////////////////////////////
@@ -96,10 +96,11 @@ uint32_t txTimer = 0;
 
 void loop(void)
 {
-
+  Serial.println(pir_alarm_state);
   // check If soft_alarm_state is true, then count 1s and set it to LOW
   if (soft_alarm_state || pir_alarm_state){
     if (runOnce) {
+      detachInterrupt(1);
       startTime = millis();
       runOnce = false;
       if (soft_alarm_state) {
@@ -126,11 +127,10 @@ void loop(void)
           digitalWrite(led_A_Pin, LOW);
           pir_alarm_state = false;
         }
-        
+        attachInterrupt(1, pirStateChange, RISING);
     }
-
   }
-
+  
   rf24Net.update();
 
   if (millis() - txTimer > 1000) {
@@ -141,6 +141,7 @@ void loop(void)
     payload.humi  = DHT11.humidity;
     payload.light = map(analogRead(optoPin), 0, 1023, 100, 0);
     payload.door  = soft_alarm_state;
+    payload.pir   = pir_alarm_state;
     payload.hkey  = random(10000000, 99999999);
 
     // starts counting
@@ -175,7 +176,7 @@ void loop(void)
     rf24Net.read(header2, &confirm, sizeof(confirm));
     Serial.println(confirm.hkey);
     Serial.println("------------------------------");
-    if (!soft_alarm_state){
+    if (soft_alarm_state == LOW && pir_alarm_state == LOW){
       Serial.println(F("Going to sleep..."));
       delay(100);
       radio.powerDown();
@@ -184,8 +185,6 @@ void loop(void)
       Serial.println(F("Woke up!"));
     }
   }
-
-
 }
 
 //////////////////////////////////////
@@ -205,11 +204,11 @@ void doorStateChange() {
 // Interrupt for pir
 //////////////////////////////////////
 void pirStateChange() {
-  static unsigned long last_interrupt_time = 0;
-  unsigned long interrupt_time = millis();
-  if (interrupt_time - last_interrupt_time > 500)
+  static unsigned long last_interrupt_time_pir = 0;
+  unsigned long interrupt_time_pir = millis();
+  if (interrupt_time_pir - last_interrupt_time_pir > 500)
   {
     pir_alarm_state = true;
   }
-  last_interrupt_time = interrupt_time;
+  last_interrupt_time_pir = interrupt_time_pir;
 }
